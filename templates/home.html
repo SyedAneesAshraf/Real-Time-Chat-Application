@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chat App</title>
+        <style>
+            /* Reset basic styling */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f2f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+
+            .container {
+                width: 90%;
+                max-width: 500px;
+                margin: auto;
+            }
+
+            h1 {
+                text-align: center;
+                color: #333;
+            }
+
+            /* Chat Interface Styling */
+            .chat-app {
+                background-color: #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .chat-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1em;
+                background-color: #007bff;
+                color: #fff;
+            }
+
+            .chat-header button {
+                padding: 8px 12px;
+                color: #007bff;
+                background-color: #fff;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+            }
+
+            .chat-content {
+                height: 400px;
+                overflow-y: auto;
+                padding: 1em;
+                background-color: #f8f9fa;
+            }
+
+            /* Chat message styling */
+            .chat-entry {
+                margin: 10px 0;
+                padding: 10px;
+                border-radius: 8px;
+                max-width: 80%;
+                word-wrap: break-word;
+            }
+
+            .chat-sender {
+                background-color: #d1e7dd;
+                align-self: flex-end;
+            }
+
+            .chat-recipient {
+                background-color: #f8d7da;
+                align-self: flex-start;
+            }
+
+            /* Message input area */
+            .message-area {
+                display: flex;
+                align-items: center;
+                padding: 0.5em;
+                border-top: 1px solid #e1e1e1;
+            }
+
+            .message-area textarea {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                resize: none;
+            }
+
+            .message-area button {
+                margin-left: 0.5em;
+                padding: 10px 16px;
+                color: #fff;
+                background-color: #007bff;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            /* Input fields for recipient selection and file uploads */
+            .start-chat {
+                margin: 1em 0;
+            }
+
+            .start-chat input, .start-chat button {
+                padding: 8px;
+                margin-top: 0.5em;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+                width: 100%;
+                font-size: 0.9em;
+            }
+
+            .start-chat button {
+                background-color: #007bff;
+                color: #fff;
+                cursor: pointer;
+            }
+
+            /* File upload input styling */
+            .upload-section {
+                display: flex;
+                align-items: center;
+                margin-top: 1em;
+                padding: 0.5em;
+            }
+
+            .upload-section input[type="file"] {
+                display: none;
+            }
+
+            .upload-label {
+                cursor: pointer;
+                color: #007bff;
+                text-decoration: underline;
+                font-size: 0.9em;
+                padding: 0.5em;
+            }
+
+            .file-message {
+                margin: 10px 0;
+                padding: 10px;
+                background-color: #e9ecef;
+                border-radius: 8px;
+            }
+
+            .file-link {
+                color: #007bff;
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome, {{ username }}!</h1>
+
+            <div class="start-chat">
+                <label>Start Private Chat:</label>
+                <input type="text" id="recipientName" placeholder="Enter username to chat with">
+                <button onclick="openChat()">Open Chat</button>
+            </div>
+
+            <div class="chat-app">
+                <!-- Header with buttons to switch between Group and Private Chat -->
+                <div class="chat-header">
+                    <span id="chatWithUser">Group Chat</span>
+                    <div>
+                        <button onclick="switchToGroupChat()">Group Chat</button>
+                        <button onclick="switchToPrivateChat()">Private Chat</button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Section -->
+                <div id="groupChat" class="chat-content">
+                    <div id="groupMessages"></div>
+                </div>
+
+                <div id="chatWindow" class="chat-content" style="display: none;">
+                    <div id="chatMessages"></div>
+                </div>
+
+                <!-- Message Input Area -->
+                <div class="message-area">
+                    <textarea id="messageInput" rows="2" placeholder="Type your message..."></textarea>
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="upload-section">
+                    <input type="file" id="fileInput" onchange="uploadFile()">
+                    <label for="fileInput" class="upload-label">Upload a file</label>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+        <script type="text/javascript">
+            const socket = io();
+            let currentChatUser = "";
+
+            // Set up user connection
+            socket.on("connect", function() {
+                socket.emit("register", "{{ username }}");
+            });
+
+            // Toggle between Group and Private chat
+            function switchToGroupChat() {
+                document.getElementById("groupChat").style.display = "block";
+                document.getElementById("chatWindow").style.display = "none";
+                document.getElementById("chatWithUser").innerText = "Group Chat";
+                currentChatUser = "";
+            }
+
+            function switchToPrivateChat() {
+                document.getElementById("groupChat").style.display = "none";
+                document.getElementById("chatWindow").style.display = "block";
+                document.getElementById("chatWithUser").innerText = currentChatUser || "Private Chat";
+            }
+
+            // Open a new private chat
+            function openChat() {
+                currentChatUser = document.getElementById("recipientName").value.trim();
+                if (currentChatUser) switchToPrivateChat();
+            }
+
+            // Send group or private message
+            function sendMessage() {
+                const messageInput = document.getElementById("messageInput");
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                if (currentChatUser) {
+                    socket.emit("private_message", { recipient: currentChatUser, message: message });
+                } else {
+                    socket.emit("group_message", { message: message });
+                }
+                messageInput.value = "";  // Clear the message input
+            }
+
+            // Handle incoming private messages
+            socket.on("private_message", function(data) {
+                const messages = document.getElementById("chatMessages");
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("chat-entry", "chat-recipient");
+                messageElement.textContent = `${data.sender}: ${data.message}`;
+                messages.appendChild(messageElement);
+                messages.scrollTop = messages.scrollHeight;
+            });
+
+            // Handle incoming group messages
+            socket.on("group_message", function(data) {
+                const messages = document.getElementById("groupMessages");
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("chat-entry", "chat-sender");
+                messageElement.textContent = `${data.sender}: ${data.message}`;
+                messages.appendChild(messageElement);
+                messages.scrollTop = messages.scrollHeight;
+            });
+
+            // File upload logic
+            function uploadFile() {
+                const fileInput = document.getElementById("fileInput");
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = function(event) {
+                        const base64Data = event.target.result.split(',')[1];
+                        const loadingId = 'loading-' + Date.now();
+                        const messages = currentChatUser ? document.getElementById("chatMessages") : document.getElementById("groupMessages");
+                        messages.innerHTML += `<div id="${loadingId}" class="file-message">Uploading ${file.name}...</div>`;
+                        messages.scrollTop = messages.scrollHeight;
+
+                        if (currentChatUser) {
+                            socket.emit("upload_private_file", { recipient: currentChatUser, fileName: file.name, fileData: base64Data });
+                        } else {
+                            socket.emit("upload_group_file", { fileName: file.name, fileData: base64Data });
+                        }
+                    };
+
+                    reader.onerror = function(error) {
+                        console.error('Error reading file:', error);
+                        alert('Error uploading file. Please try again.');
+                    };
+
+                    reader.readAsDataURL(file);
+                    fileInput.value = '';  // Clear file input
+                }
+            }
+
+            // Handle file uploads in group chat
+            socket.on("group_file_uploaded", function(data) {
+                const messages = document.getElementById("groupMessages");
+                const fileMessage = document.createElement("div");
+                fileMessage.classList.add("file-message");
+                fileMessage.innerHTML = `${data.sender} uploaded a file: <a href="${data.fileUrl}" target="_blank" class="file-link">${data.fileName}</a>`;
+                messages.appendChild(fileMessage);
+                messages.scrollTop = messages.scrollHeight;
+            });
+
+            // Handle private file uploads
+            socket.on("private_file_uploaded", function(data) {
+                const messages = document.getElementById("chatMessages");
+                const fileMessage = document.createElement("div");
+                fileMessage.classList.add("file-message");
+                fileMessage.innerHTML = `${data.sender} uploaded a file: <a href="${data.fileUrl}" target="_blank" class="file-link">${data.fileName}</a>`;
+                messages.appendChild(fileMessage);
+                messages.scrollTop = messages.scrollHeight;
+            });
+        </script>
+    </body>
+    </html>
