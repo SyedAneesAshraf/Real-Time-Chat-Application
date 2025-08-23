@@ -1,4 +1,4 @@
-# Real-Time Chat Application 💬
+# Real-Time Chat Application 💬 
 
 A modern, real-time chat application built with Flask and Socket.IO that supports both group and private messaging with file sharing capabilities.
 
@@ -121,19 +121,6 @@ You can customize the following settings in `final.py`:
 4. **Private Messaging**: Direct messages are sent only to specific users using session IDs
 5. **File Handling**: Files are encoded in Base64, uploaded to server, and shared via URLs
 
-## 🚧 Future Enhancements
-
-- [ ] User authentication and registration system
-- [ ] Message history and persistence
-- [ ] Emoji support
-- [ ] Typing indicators
-- [ ] Online users list
-- [ ] Message encryption
-- [ ] File type restrictions and validation
-- [ ] Room-based chat groups
-- [ ] Message timestamps
-- [ ] Push notifications
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -165,3 +152,5 @@ If you have any questions or run into issues, please feel free to:
 ---
 
 **Happy Chatting! 🎉**
+
+Check it out at: https://real-time-web-chatting-application-5.onrender.com
